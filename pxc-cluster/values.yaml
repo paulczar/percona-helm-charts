@@ -1,0 +1,40 @@
+# Default values for pxc-cluster.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+finalizers:
+    - delete-pxc-pods-in-order
+#    - delete-proxysql-pvc
+#    - delete-pxc-pvc
+
+nameOverride: ""
+fullnameOverride: ""
+
+pxc:
+  size: 3
+  image:
+    repository: percona/percona-xtradb-cluster-operator
+    tag: 1.0.0-pxc
+  imagePullSecrets: []
+  #  - name: private-registry-credentials
+
+secrets:
+  passwords:
+    root: insecure-root-password
+    xtrabackup: insecure-xtrabackup-password
+    monitor: insecure-monitor-password
+    clustercheck: insecure-clustercheck-password
+    proxyadmin: insecure-proxyadmin-password
+    pmmserver: insecure-pmmserver-password
+
+# If this is set will not create secrets from values and will instead try to use
+# a pre-existing secret of the same name.
+clusterSecret: ~
+
+# If this is set will not create secrets from values and will instead try to use
+# a pre-existing secret of the same name.
+clusterSSLSecret: ~
+
+# If this is set will not create secrets from values and will instead try to use
+# a pre-existing secret of the same name.
+clusterSSLInternalSecret: ~

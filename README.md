@@ -1,0 +1,1 @@
+This repo contains helm charts for Percona stuff
