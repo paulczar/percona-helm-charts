@@ -5,6 +5,7 @@ metadata:
   name: perconaxtradbclusters.pxc.percona.com
   annotations:
     "helm.sh/hook": "crd-install"
+    "fart": "poop"
   labels:
 {{ include "pxc-operator.labels" . | indent 4 }}
 spec:

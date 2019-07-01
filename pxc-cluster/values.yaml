@@ -3,9 +3,9 @@
 # Declare variables to be passed into your templates.
 
 finalizers:
-    - delete-pxc-pods-in-order
-#    - delete-proxysql-pvc
-#    - delete-pxc-pvc
+  - delete-pxc-pods-in-order
+#  - delete-proxysql-pvc
+#  - delete-pxc-pvc
 
 nameOverride: ""
 fullnameOverride: ""

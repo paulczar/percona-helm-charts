@@ -1,0 +1,31 @@
+version: 2
+jobs:
+  # lint-scripts:
+  #   docker:
+  #     - image: koalaman/shellcheck-alpine
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: lint
+  #         command: |
+  #           shellcheck -x test/build.sh
+  #           shellcheck -x test/e2e.sh
+  #           shellcheck -x test/helm-test-e2e.sh
+  #           shellcheck -x test/repo-sync.sh
+  lint-charts:
+    docker:
+      - image: gcr.io/kubernetes-charts-ci/test-image:v3.3.2
+    steps:
+      - checkout
+      - run:
+          name: lint
+          command: |
+            git remote add upstream https://github.com/paulczar/percona-helm-charts
+            git fetch upstream master
+            ct lint --config test/ct.yaml
+workflows:
+  version: 2
+  lint:
+    jobs:
+#      - lint-scripts
+      - lint-charts
