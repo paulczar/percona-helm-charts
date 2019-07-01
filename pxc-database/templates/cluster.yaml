@@ -1,26 +1,26 @@
 apiVersion: pxc.percona.com/v1
 kind: PerconaXtraDBCluster
 metadata:
-  name: {{ include "pxc-cluster.fullname" . }}
+  name: {{ include "pxc-database.fullname" . }}
   labels:
-{{ include "pxc-cluster.labels" . | indent 4 }}
+{{ include "pxc-database.labels" . | indent 4 }}
   finalizers:
 {{ .Values.finalizers | toYaml | indent 4 }}
 spec:
   {{- if .Values.clusterSecret }}
   secretsName: {{ .Values.clusterSecret }}
   {{- else }}
-  secretsName: {{ include "pxc-cluster.fullname" . }}
+  secretsName: {{ include "pxc-database.fullname" . }}
   {{- end }}
   {{- if .Values.clusterSecretSSL }}
   sslSecretName: {{ .Values.clusterSecretSSL }}
   {{- else }}
-  sslSecretName: {{ include "pxc-cluster.fullname" . }}
+  sslSecretName: {{ include "pxc-database.fullname" . }}
   {{- end }}
   {{- if .Values.clusterSecretSSLInternal }}
   sslInternalSecretName: {{ .Values.clusterSecretSSLInternal }}
   {{- else }}
-  sslInternalSecretName: {{ include "pxc-cluster.fullname" . }}
+  sslInternalSecretName: {{ include "pxc-database.fullname" . }}
   {{- end }}
 #  pause: false
   {{- $pxc := .Values.pxc }}

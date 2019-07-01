@@ -1,4 +1,4 @@
-#remote: upstream
+remote: upstream
 target-branch: master
 chart-dirs: ["."]
 excluded-charts: []
