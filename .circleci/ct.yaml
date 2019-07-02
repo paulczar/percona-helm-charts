@@ -1,6 +1,1 @@
-remote: upstream
-target-branch: master
-chart-dirs: ["./charts"]
-excluded-charts: []
-chart-repos: []
 helm-extra-args: --timeout 600
