@@ -15,7 +15,7 @@ mkdir -p .deploy/readme
 cp --force README.md .deploy/readme/
 for file in `ls charts/*/*.md`; do
     mkdir -p .deploy/readme/`dirname $file`
-    cp $file `dirname $file`
+    cp --force $file .deploy/readme/`dirname $file`
 done
 
 git checkout gh-pages
