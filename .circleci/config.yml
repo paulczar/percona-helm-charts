@@ -38,6 +38,17 @@ jobs:
             .circleci/install_tools.sh
             .circleci/release.sh
 
+  update-docs:
+    machine: true
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "83:f0:ba:b3:b1:ce:c4:ae:34:44:fe:7d:a2:89:5b:d4"
+      - run:
+          command: |
+            .circleci/update_docs.sh
+
 workflows:
   version: 2
   lint:
@@ -52,6 +63,12 @@ workflows:
   release:
     jobs:
       - release-charts:
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: master
+      - update-docs:
           filters:
             tags:
               ignore: /.*/
