@@ -22,19 +22,19 @@ spec:
   {{- else }}
   sslInternalSecretName: {{ include "pxc-database.fullname" . }}
   {{- end }}
-#  pause: false
+# pause: false
   {{- $pxc := .Values.pxc }}
   pxc:
     size: {{ $pxc.size }}
     allowUnsafeConfigurations: false
     image: "{{ $pxc.image.repository }}:{{ $pxc.image.tag }}"
-#    readinessDelaySec: 15
-#    livenessDelaySec: 300
-#    forceUnsafeBootstrap: false
-#    configuration: |
-#      [mysqld]
-#      wsrep_debug=ON
-#      wsrep_provider_options="gcache.size=1G; gcache.recover=yes"
+    readinessDelaySec: {{ $pxc.readinessDelaySec }}
+    livenessDelaySec: {{ $pxc.livenessDelaySec }}
+    forceUnsafeBootstrap: {{ $pxc.forceUnsafeBootstrap }}
+    {{- if $pxc.configuration }}
+    configuration: |
+    {{ $pxc.configuration | nindent 6 }}
+    {{- end }}
     imagePullSecrets:
 {{ $pxc.imagePullSecrets | toYaml | indent 6 }}
 #    priorityClassName: high-priority
@@ -44,30 +44,15 @@ spec:
 #      rack: rack-22
     resources:
       requests:
-        memory: 1G
-        cpu: 600m
-#      limits:
-#        memory: 1G
-#        cpu: "1"
+{{ $pxc.resources.requests | toYaml | indent 8 }}
+      limits:
+{{ $pxc.resources.limits | toYaml | indent 8 }}
 #    nodeSelector:
 #      disktype: ssd
     affinity:
-      antiAffinityTopologyKey: "kubernetes.io/hostname"
-#      advanced:
-#        nodeAffinity:
-#          requiredDuringSchedulingIgnoredDuringExecution:
-#            nodeSelectorTerms:
-#            - matchExpressions:
-#              - key: kubernetes.io/e2e-az-name
-#                operator: In
-#                values:
-#                - e2e-az1
-#                - e2e-az2
-#    tolerations: 
-#    - key: "node.alpha.kubernetes.io/unreachable"
-#      operator: "Exists"
-#      effect: "NoExecute"
-#      tolerationSeconds: 6000
+{{ $pxc.resources.affinity | toYaml | indent 6 }}
+    tolerations:
+{{ $pxc.resources.tolerations | toYaml | indent 6 }}
     podDisruptionBudget:
       maxUnavailable: 1
 #      minAvailable: 0
@@ -82,7 +67,7 @@ spec:
         resources:
           requests:
             storage: 6Gi
-    gracePeriod: 600
+    gracePeriod: {{ $pxc.gracePeriod }}
   proxysql:
     enabled: true
     size: 3

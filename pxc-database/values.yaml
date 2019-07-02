@@ -16,7 +16,40 @@ pxc:
     repository: percona/percona-xtradb-cluster-operator
     tag: 1.0.0-pxc
   imagePullSecrets: []
-  #  - name: private-registry-credentials
+  # - name: private-registry-credentials
+  readinessDelaySec: 15
+  livenessDelaySec: 300
+  forceUnsafeBootstrap: false
+  ## Uncomment to pass in a mysql config file
+  # configuration: |
+  #   [mysqld]
+  #   wsrep_debug=ON
+  #   wsrep_provider_options="gcache.size=1G; gcache.recover=yes"
+  resources:
+    requests:
+      memory: 1G
+      cpu: 600m
+    limits: {}
+      # memory: 1G
+      # cpu: 600m
+  affinity:
+    antiAffinityTopologyKey: "kubernetes.io/hostname"
+    # advanced:
+    #   nodeAffinity:
+    #     requiredDuringSchedulingIgnoredDuringExecution:
+    #       nodeSelectorTerms:
+    #       - matchExpressions:
+    #         - key: kubernetes.io/e2e-az-name
+    #           operator: In
+    #           values:
+    #           - e2e-az1
+    #           - e2e-az2
+  tolerations: []
+    # - key: "node.alpha.kubernetes.io/unreachable"
+    #   operator: "Exists"
+    #   effect: "NoExecute"
+    #   tolerationSeconds: 6000
+  gracePeriod: 600
 
 secrets:
   passwords:
