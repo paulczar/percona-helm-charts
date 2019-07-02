@@ -2,8 +2,8 @@
 
 This repository contains Helm charts for various Percona products.
 
-* [Percona XtraDB Cluster Operator](pxc-operator/README.md)
-* [Percona XtraDB Cluster](pxc-database/README.md)
+* [Percona XtraDB Cluster Operator](charts/pxc-operator/)
+* [Percona XtraDB Cluster](charts/pxc-database/)
 
 ## Installing Charts from this Repository
 

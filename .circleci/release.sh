@@ -79,11 +79,23 @@ update_index() {
     git config user.email "$GIT_EMAIL"
     git config user.name "$GIT_USERNAME"
 
+    update_docs
+
     git checkout gh-pages
     cp --force .deploy/index.yaml index.yaml
+    cp --recursive --force .deploy/readme/* .
     git add index.yaml
     git commit --message="Update index.yaml" --signoff
     git push "$GIT_REPOSITORY_URL" gh-pages
+}
+
+update_docs() {
+    mkdir -p .deploy/readme
+    cp --force README.md .deploy/readme/
+    for file in `ls charts/*/*.md`; do
+        mkdir -p .deploy/readme/`dirname $file`
+        cp $file `dirname $file`
+    done
 }
 
 main
