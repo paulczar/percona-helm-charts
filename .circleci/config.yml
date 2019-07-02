@@ -47,6 +47,8 @@ jobs:
             - "83:f0:ba:b3:b1:ce:c4:ae:34:44:fe:7d:a2:89:5b:d4"
       - run:
           command: |
+            echo "export GIT_REPOSITORY_URL=$CIRCLE_REPOSITORY_URL" >> $BASH_ENV
+            echo "export GIT_USERNAME=$CIRCLE_PROJECT_USERNAME" >> $BASH_ENV
             .circleci/update_docs.sh
 
 workflows:
