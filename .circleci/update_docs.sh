@@ -3,7 +3,7 @@
 set -o errexit
 set -o nounset
 set -o pipefail
-set -s nullglob
+shopt -s nullglob
 
 : "${GIT_REPOSITORY_URL:?Environment variable GIT_REPO_URL must be set}"
 : "${GIT_USERNAME:?Environment variable GIT_USERNAME must be set}"
