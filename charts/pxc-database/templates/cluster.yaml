@@ -7,26 +7,30 @@ metadata:
   finalizers:
 {{ .Values.finalizers | toYaml | indent 4 }}
 spec:
-  {{- if .Values.clusterSecret }}
-  secretsName: {{ .Values.clusterSecret }}
+  {{- if hasKey .Values.pxc "clusterSecretName" }}
+  secretsName: {{ .Values.pxc.clusterSecretName }}
   {{- else }}
   secretsName: {{ include "pxc-database.fullname" . }}
   {{- end }}
-  {{- if .Values.clusterSecretSSL }}
-  sslSecretName: {{ .Values.clusterSecretSSL }}
+  {{- if not .Values.pxc.disableTLS }}
+  {{- if hasKey .Values.secrets.tls "cluster" }}
+  sslSecretName: {{ .Values.secrets.tls.cluster }}
   {{- else }}
-  sslSecretName: {{ include "pxc-database.fullname" . }}
+  sslSecretName: {{ include "pxc-database.fullname" . }}-ssl
   {{- end }}
-  {{- if .Values.clusterSecretSSLInternal }}
-  sslInternalSecretName: {{ .Values.clusterSecretSSLInternal }}
+  {{- if hasKey .Values.secrets.tls "internal" }}
+  sslInternalSecretName: {{ hasKey .Values.secrets.tls.cluster }}
   {{- else }}
-  sslInternalSecretName: {{ include "pxc-database.fullname" . }}
+  sslInternalSecretName: {{ include "pxc-database.fullname" . }}-ssl-internal
   {{- end }}
-# pause: false
+  {{- end }}
+  pause: {{ .Values.pause }}
   {{- $pxc := .Values.pxc }}
   pxc:
     size: {{ $pxc.size }}
+    {{- if .Values.pxc.disableTLS }}
     allowUnsafeConfigurations: false
+    {{- end }}
     image: "{{ $pxc.image.repository }}:{{ $pxc.image.tag }}"
     readinessDelaySec: {{ $pxc.readinessDelaySec }}
     livenessDelaySec: {{ $pxc.livenessDelaySec }}
@@ -35,124 +39,134 @@ spec:
     configuration: |
     {{ $pxc.configuration | nindent 6 }}
     {{- end }}
+    {{- if $pxc.imagePullSecrets }}
     imagePullSecrets:
 {{ $pxc.imagePullSecrets | toYaml | indent 6 }}
-#    priorityClassName: high-priority
-#    annotations:
-#      iam.amazonaws.com/role: role-arn
-#    labels:
-#      rack: rack-22
+    {{- end }}
+{{- if hasKey $pxc "priorityClassName" }}
+    priorityClassName: {{ $pxc.priorityClassName }}
+{{- end }}
+    annotations:
+{{ $pxc.annotations | toYaml | indent 6 }}
+    labels:
+{{ $pxc.labels | toYaml | indent 6 }}
     resources:
       requests:
 {{ $pxc.resources.requests | toYaml | indent 8 }}
       limits:
 {{ $pxc.resources.limits | toYaml | indent 8 }}
-#    nodeSelector:
-#      disktype: ssd
+    nodeSelector:
+{{ $pxc.nodeSelector | toYaml | indent 6 }}
     affinity:
-{{ $pxc.resources.affinity | toYaml | indent 6 }}
+{{ $pxc.affinity | toYaml | indent 6 }}
     tolerations:
-{{ $pxc.resources.tolerations | toYaml | indent 6 }}
+{{ $pxc.tolerations | toYaml | indent 6 }}
     podDisruptionBudget:
-      maxUnavailable: 1
-#      minAvailable: 0
+{{ $pxc.podDisruptionBudget | toYaml | indent 6 }}
     volumeSpec:
-#      emptyDir: {}
-#      hostPath:
-#        path: /data
-#        type: Directory
+    {{- if not $pxc.persistence.enabled }}
+      emptyDir: {}
+    {{- else }}
+    {{- if hasKey $pxc.persistence "hostPath" }}
+      hostPath:
+        path: {{ $pxc.persistence.hostPath }}
+        type: Directory
+    {{- else }}
       persistentVolumeClaim:
-#        storageClassName: standard
-#        accessModes: [ "ReadWriteOnce" ]
+        {{- if $pxc.persistence.storageClass }}
+        {{- if (eq "-" $pxc.persistence.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ $pxc.persistence.storageClass }}"
+        {{- end }}
+        {{- end }}
+        accessModes: [{{ $pxc.persistence.accessMode | quote }}]
         resources:
           requests:
-            storage: 6Gi
+            storage: {{ $pxc.persistence.size | quote }}
+    {{- end }}
+    {{- end }}
     gracePeriod: {{ $pxc.gracePeriod }}
+  {{- if not .Values.proxysql.enabled }}
+  proxysql:
+    enabled: false
+  {{- else }}
+  {{- $proxysql := .Values.proxysql }}
   proxysql:
     enabled: true
-    size: 3
+    size: {{ $proxysql.size }}
     image: percona/percona-xtradb-cluster-operator:1.0.0-proxysql
-#    imagePullSecrets:
-#      - name: private-registry-credentials
-#    annotations:
-#      iam.amazonaws.com/role: role-arn
-#    labels:
-#      rack: rack-22
-#    serviceType: ClusterIP
+    {{- if $proxysql.imagePullSecrets }}
+    imagePullSecrets:
+    {{- $proxysql.imagePullSecrets | toYaml | indent 6 }}
+    {{- end }}
+{{- if hasKey $proxysql "priorityClassName" }}
+    priorityClassName: {{ $proxysql.priorityClassName }}
+{{- end }}
+    annotations:
+{{ $proxysql.annotations | toYaml | indent 6 }}
+    labels:
+{{ $proxysql.labels | toYaml | indent 6 }}
     resources:
       requests:
-        memory: 1G
-        cpu: 600m
-#      limits:
-#        memory: 1G
-#        cpu: 700m
-#    priorityClassName: high-priority
-#    nodeSelector:
-#      disktype: ssd
+{{ $proxysql.resources.requests | toYaml | indent 8 }}
+      limits:
+{{ $proxysql.resources.limits | toYaml | indent 8 }}
+    nodeSelector:
+{{ $proxysql.nodeSelector | toYaml | indent 6 }}
     affinity:
-      antiAffinityTopologyKey: "kubernetes.io/hostname"
-#      advanced:
-#        nodeAffinity:
-#          requiredDuringSchedulingIgnoredDuringExecution:
-#            nodeSelectorTerms:
-#            - matchExpressions:
-#              - key: kubernetes.io/e2e-az-name
-#                operator: In
-#                values:
-#                - e2e-az1
-#                - e2e-az2
-#    tolerations:
-#    - key: "node.alpha.kubernetes.io/unreachable"
-#      operator: "Exists"
-#      effect: "NoExecute"
-#      tolerationSeconds: 6000
+{{ $proxysql.affinity | toYaml | indent 6 }}
+    tolerations:
+{{ $proxysql.tolerations | toYaml | indent 6 }}
+    podDisruptionBudget:
+{{ $proxysql.podDisruptionBudget | toYaml | indent 6 }}
     volumeSpec:
-#      emptyDir: {}
-#      hostPath:
-#        path: /data
-#        type: Directory
+    {{- if not $proxysql.persistence.enabled }}
+      emptyDir: {}
+    {{- else }}
+    {{- if hasKey $proxysql.persistence "hostPath" }}
+      hostPath:
+        path: {{ $proxysql.persistence.hostPath }}
+        type: Directory
+    {{- else }}
       persistentVolumeClaim:
-#        storageClassName: standard
-#        accessModes: [ "ReadWriteOnce" ]
+        {{- if $proxysql.persistence.storageClass }}
+        {{- if (eq "-" $proxysql.persistence.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ $proxysql.persistence.storageClass }}"
+        {{- end }}
+        {{- end }}
+        accessModes: [{{ $proxysql.persistence.accessMode | quote }}]
         resources:
           requests:
-            storage: 2Gi
-    podDisruptionBudget:
-      maxUnavailable: 1
-#      minAvailable: 0
-    gracePeriod: 30
+            storage: {{ $proxysql.persistence.size | quote }}
+    {{- end }}
+    {{- end }}
+    gracePeriod: {{ $proxysql.gracePeriod }}
+  {{- end }}
+  {{- if not .Values.pmm.enabled }}
   pmm:
     enabled: false
-    image: perconalab/pmm-client:1.17.1
-    serverHost: monitoring-service
-    serverUser: pmm
+  {{- else }}
+    {{- $pmm := .Values.pmm }}
+    enabled: true
+    image: {{ $pmm.image.repository }}/{{ $pmm.image.tag }}
+    serverHost: {{ $pmm.serverHost }}
+    serverUser: {{ $pmm.serverUser }}
+  {{- end }}
+  {{- $backup := .Values.backup }}
   backup:
-    image: percona/percona-xtradb-cluster-operator:1.0.0-backup
-    serviceAccountName: percona-xtradb-cluster-operator
-#    imagePullSecrets:
-#      - name: private-registry-credentials
+  {{- if not $backup.enabled }}
+    enabled: false
+  {{- end }}
+    image: {{ $backup.image.repository }}/{{ $backup.image.tag }}
+    serviceAccountName: default
+    {{- if $backup.imagePullSecrets }}
+    imagePullSecrets:
+{{ $backup.imagePullSecrets | toYaml | indent 6 }}
+    {{- end }}
     storages:
-      s3-us-west:
-        type: s3
-        s3:
-          bucket: S3-BACKUP-BUCKET-NAME-HERE
-          credentialsSecret: my-cluster-name-backup-s3
-          region: us-west-2
-      fs-pvc:
-        type: filesystem
-        volume:
-          persistentVolumeClaim:
-#            storageClassName: standard
-            accessModes: [ "ReadWriteOnce" ]
-            resources:
-              requests:
-                storage: 6Gi
+{{ $backup.storages | toYaml | indent 6 }}
     schedule:
-      - name: "sat-night-backup"
-        schedule: "0 0 * * 6"
-        keep: 3
-        storageName: s3-us-west
-      - name: "daily-backup"
-        schedule: "0 0 * * *"
-        keep: 5
-        storageName: fs-pvc
+{{ $backup.schedule | toYaml | indent 6 }}

@@ -16,6 +16,7 @@ mkdir -p .deploy/readme
 cp --force README.md .deploy/readme/
 
 for file in charts/*/*.md; do
+    echo $file
     mkdir -p ".deploy/readme/$(dirname "$file")"
     cp --force "$file" ".deploy/readme/$(dirname "$file")"
 done
