@@ -33,3 +33,13 @@ By setting `pxc.certManager=true` we're signaling the Helm chart to not create s
 ```bash
 $ helm install -n dev  --namespace pxc . --set pxc.certManager=true
 ```
+
+### Deploy a production grade cluster
+
+The pxc-database chart contains an example production values file that should set you
+well on your path to running a production database. It is not fully production grade as
+there are some requirements for you to provide your own secrets for passwords and TLS to be truly production ready, but it does provide comments on how to do those parts.
+
+```bash
+$ helm install -n prod --file production-values.yaml --namespace pxc .
+```
