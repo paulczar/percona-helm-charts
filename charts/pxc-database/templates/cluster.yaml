@@ -151,16 +151,17 @@ spec:
   {{- else }}
     {{- $pmm := .Values.pmm }}
     enabled: true
-    image: {{ $pmm.image.repository }}/{{ $pmm.image.tag }}
+    image: {{ $pmm.image.repository }}:{{ $pmm.image.tag }}
     serverHost: {{ $pmm.serverHost }}
     serverUser: {{ $pmm.serverUser }}
   {{- end }}
   {{- $backup := .Values.backup }}
+
   backup:
   {{- if not $backup.enabled }}
     enabled: false
   {{- end }}
-    image: {{ $backup.image.repository }}/{{ $backup.image.tag }}
+    image: {{ $backup.image.repository }}:{{ $backup.image.tag }}
     serviceAccountName: default
     {{- if $backup.imagePullSecrets }}
     imagePullSecrets:
