@@ -49,6 +49,7 @@ main() {
         done
 
         release_charts
+        sleep 5
         update_index
     else
         echo "Nothing to do. No chart changes detected."
@@ -79,11 +80,28 @@ update_index() {
     git config user.email "$GIT_EMAIL"
     git config user.name "$GIT_USERNAME"
 
+    for file in charts/*/*.md; do
+        if [[ -e $file ]]; then
+            mkdir -p ".deploy/docs/$(dirname "$file")"
+            cp --force "$file" ".deploy/docs/$(dirname "$file")"
+        fi
+    done
+
     git checkout gh-pages
     cp --force .deploy/index.yaml index.yaml
-    git add index.yaml
-    git commit --message="Update index.yaml" --signoff
-    git push "$GIT_REPOSITORY_URL" gh-pages
+
+    if [[ -e ".deploy/docs/charts" ]]; then
+        mkdir -p charts
+        cp --force --recursive .deploy/docs/charts/* charts/
+    fi
+
+    git checkout master -- README.md
+
+    if ! git diff --quiet; then
+        git add .
+        git commit --message="Update index.yaml" --signoff
+        git push "$GIT_REPOSITORY_URL" gh-pages
+    fi
 }
 
 main
